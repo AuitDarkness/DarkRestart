@@ -86,8 +86,3 @@ notifications:
 2. Создайте ветку для ваших изменений
 3. Сделайте Pull Request
 
-## Благодарности
-
-- [SpigotMC](https://www.spigotmc.org/) за API
-- [PaperMC](https://papermc.io/) за поддержку
-- Всем, кто помогал в разработке плагина 
