@@ -1,0 +1,48 @@
+name: DarkRestart
+version: 1.0
+main: com.dark.restartplugin.RestartPlugin
+api-version: 1.19
+author: AuitDarkness
+description: Мощный плагин для управления рестартом сервера Minecraft
+
+commands:
+  drestart:
+    description: Управление рестартом сервера
+    usage: /drestart <menu|start|cancel|status|help>
+    permission: darkrestart.use
+  autorestart:
+    description: Управление авторестартом
+    usage: /autorestart <set|cancel|status>
+    permission: darkrestart.autorestart
+
+permissions:
+  darkrestart.use:
+    description: Доступ к основным командам рестарта
+    default: op
+  darkrestart.autorestart:
+    description: Доступ к управлению авторестартом
+    default: op
+  darkrestart.technical:
+    description: Доступ к техническому рестарту
+    default: op
+  darkrestart.notify:
+    description: Получение уведомлений о рестарте
+    default: true
+  darkrestart.admin:
+    description: Полный доступ к плагину
+    default: op
+    children:
+      darkrestart.use: true
+      darkrestart.autorestart: true
+      darkrestart.technical: true
+  darkrestart.moderator:
+    description: Доступ к основным функциям рестарта
+    default: false
+    children:
+      darkrestart.use: true
+      darkrestart.notify: true
+  darkrestart.helper:
+    description: Базовый доступ к плагину
+    default: false
+    children:
+      darkrestart.notify: true
