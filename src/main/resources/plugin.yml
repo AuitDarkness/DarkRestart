@@ -1,48 +1,39 @@
 name: DarkRestart
-version: 1.0
+version: 1.0.1
 main: com.dark.restartplugin.RestartPlugin
-api-version: 1.19
-author: AuitDarkness
-description: Мощный плагин для управления рестартом сервера Minecraft
-
+api-version: 1.13
+authors: [AuitDarkness]
+description: Мощный плагин для управления рестартом сервера
+website: https://github.com/AuitDarkness/DarkRestart
+softdepend: [Vault]
 commands:
   drestart:
-    description: Управление рестартом сервера
-    usage: /drestart <menu|start|cancel|status|help>
-    permission: darkrestart.use
+    description: Основная команда плагина
+    usage: /<command> [menu|start|cancel|status]
+    aliases: [dr]
   autorestart:
-    description: Управление авторестартом
-    usage: /autorestart <set|cancel|status>
-    permission: darkrestart.autorestart
-
+    description: Команда управления авторестартом
+    usage: /<command> [set|cancel|status]
+    aliases: [ar]
 permissions:
+  darkrestart.admin:
+    description: Полный доступ к плагину
+    default: op
+  darkrestart.moderator:
+    description: Доступ к основным функциям
+    default: op
+  darkrestart.helper:
+    description: Базовый доступ
+    default: op
   darkrestart.use:
-    description: Доступ к основным командам рестарта
+    description: Использование основных команд
     default: op
   darkrestart.autorestart:
-    description: Доступ к управлению авторестартом
+    description: Управление авторестартом
     default: op
   darkrestart.technical:
     description: Доступ к техническому рестарту
     default: op
   darkrestart.notify:
-    description: Получение уведомлений о рестарте
+    description: Получение уведомлений
     default: true
-  darkrestart.admin:
-    description: Полный доступ к плагину
-    default: op
-    children:
-      darkrestart.use: true
-      darkrestart.autorestart: true
-      darkrestart.technical: true
-  darkrestart.moderator:
-    description: Доступ к основным функциям рестарта
-    default: false
-    children:
-      darkrestart.use: true
-      darkrestart.notify: true
-  darkrestart.helper:
-    description: Базовый доступ к плагину
-    default: false
-    children:
-      darkrestart.notify: true
