@@ -39,9 +39,13 @@ public class RestartPlugin extends JavaPlugin implements TabCompleter {
         try {
             loadConfigs();
             initializeManagers();
-            registerCommands();
+            saveDefaultConfig();
+            autoRestartManager = new AutoRestartManager(this);
             getLogger().info("§aDark Restart Plugin включен!");
             
+            getCommand("drestart").setExecutor(new RestartCommand(this));
+            getCommand("autorestart").setExecutor(new AutoRestartCommand(this));
+
             // Восстанавливаем запланированный рестарт
             if (getConfig().getLong("restart-time", 0) > System.currentTimeMillis()) {
                 long timeLeft = (getConfig().getLong("restart-time") - System.currentTimeMillis()) / 1000;
@@ -86,13 +90,11 @@ public class RestartPlugin extends JavaPlugin implements TabCompleter {
 
     private void initializeManagers() {
         restartManager = new RestartManager(this);
-        autoRestartManager = new AutoRestartManager(this);
         restartMenu = new RestartMenu(this);
     }
 
     private void registerCommands() {
         getCommand("drestart").setExecutor(new RestartCommand(this));
-        getCommand("autorestart").setExecutor(new AutoRestartCommand(this));
     }
 
     public String getMessage(String path) {

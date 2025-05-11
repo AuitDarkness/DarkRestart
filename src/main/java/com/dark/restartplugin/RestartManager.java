@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class RestartManager {
@@ -35,6 +36,20 @@ public class RestartManager {
 
         // Запускаем обратный отсчет
         startCountdown();
+    }
+
+    // Add new overloaded method
+    public void scheduleRestart(long delay, String reason, boolean technical, List<Integer> warnings) {
+        if (isRestartScheduled()) {
+            return;
+        }
+
+        this.restartTime = System.currentTimeMillis() + delay;
+        this.restartReason = reason;
+        this.isTechnical = technical;
+        
+        startWarnings(warnings);
+        saveRestartData();
     }
 
     public void cancelRestart() {
@@ -147,4 +162,15 @@ public class RestartManager {
     public boolean isTechnical() {
         return isTechnical;
     }
-} 
+
+    private void startWarnings(List<Integer> warnings) {
+        // Placeholder for warning logic
+    }
+
+    private void saveRestartData() {
+        plugin.getConfig().set("restart.time", restartTime);
+        plugin.getConfig().set("restart.reason", restartReason);
+        plugin.getConfig().set("restart.is-technical", isTechnical);
+        plugin.saveConfig();
+    }
+}

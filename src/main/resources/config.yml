@@ -2,73 +2,31 @@
 
 # Настройки рестарта
 restart:
-  # Время до рестарта в миллисекундах (0 если рестарт не запланирован)
-  time: 0
-  # Причина рестарта
-  reason: "Запланированный рестарт"
-  # Является ли рестарт техническим
-  is-technical: false
-  # Звук обратного отсчета
   countdown-sound: "block.note_block.pling"
-  # Интервал авторестарта в часах (0 = отключен)
-  auto-restart-interval: 0
 
-# Настройки авторестарта
-autorestart:
-  # Интервал авторестарта в часах (0 если отключен)
-  interval: 6
-  # Время следующего авторестарта в миллисекундах
-  next-restart: 0
+# Авто рестарт настройки
+auto-restart:
+  enabled: true
+  interval: 6 # Интервал между рестартами в часах
+  warning-time: 300 # За сколько секунд начать предупреждать о рестарте
+  warnings:
+    - 300 # 5 минут
+    - 240 # 4 минуты
+    - 180 # 3 минуты
+    - 120 # 2 минуты
+    - 60  # 1 минута
+    - 30  # 30 секунд
+    - 10  # 10 секунд
+    - 5   # 5 секунд
 
 # Настройки уведомлений
 notifications:
-  # Интервал уведомлений в секундах (0 для отключения)
-  interval: 300
-  # Показывать ли уведомления в ActionBar
   actionbar: true
-  # Проигрывать ли звуки при обратном отсчете
   sounds: true
-  # Громкость звука (0.0 - 1.0)
   sound-volume: 1.0
-  # Высота звука (0.5 - 2.0)
   sound-pitch: 1.0
-
-# Настройки звуков
-sounds:
-  enabled: true
-  volume: 1.0
-  pitch: 1.0
-
-# Настройки ActionBar
-actionbar:
-  enabled: true
-  update-interval: 1  # Интервал обновления в секундах
-
-# Настройки технического рестарта
-technical-restart:
-  default-minutes: 5
-  default-reason: "Технические работы"
 
 # Настройки меню
 menu:
   title: "&9Меню рестарта"
   size: 27
-  buttons:
-    - slot: 10
-      minutes: 5
-      display: "5 минут"
-    - slot: 12
-      minutes: 10
-      display: "10 минут"
-    - slot: 14
-      minutes: 30
-      display: "30 минут"
-    - slot: 16
-      minutes: 60
-      display: "1 час"
-    - slot: 20
-      type: "technical"
-      display: "Технический рестарт"
-    - slot: 22
-      type: "cancel"
-      display: "Отменить рестарт" 
