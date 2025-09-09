@@ -10,7 +10,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
 import java.util.Arrays;
 
 public class RestartMenu implements Listener {
@@ -19,43 +18,40 @@ public class RestartMenu implements Listener {
 
     public RestartMenu(RestartPlugin plugin) {
         this.plugin = plugin;
-        this.title = ChatColor.translateAlternateColorCodes('&', plugin.getMessage("menu-title"));
+        this.title = ChatColor.translateAlternateColorCodes('&', plugin.getConfigManager().getMessage("menu-title"));
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public void openMenu(Player player) {
         Inventory menu = Bukkit.createInventory(player, 27, title);
 
-        // Кнопка авторестарта
         ItemStack autoRestart = createItem(Material.CLOCK, 
-            plugin.getMessage("menu-auto-restart"),
+            plugin.getConfigManager().getMessage("menu-auto-restart"),
             Arrays.asList(
-                plugin.getMessage("menu-auto-restart-lore"),
-                plugin.getMessage("menu-auto-restart-cannot-cancel"),
+                plugin.getConfigManager().getMessage("menu-auto-restart-lore"),
+                plugin.getConfigManager().getMessage("menu-auto-restart-cannot-cancel"),
                 "",
                 "&eИспользование:",
                 "&f/autorestart set <часы>",
                 "&fПример: /autorestart set 6"
             ));
 
-        // Кнопка срочного рестарта
         ItemStack urgentRestart = createItem(Material.REDSTONE_BLOCK,
-            plugin.getMessage("menu-urgent-restart"),
+            plugin.getConfigManager().getMessage("menu-urgent-restart"),
             Arrays.asList(
-                plugin.getMessage("menu-urgent-restart-lore"),
-                plugin.getMessage("menu-urgent-cannot-cancel"),
+                plugin.getConfigManager().getMessage("menu-urgent-restart-lore"),
+                plugin.getConfigManager().getMessage("menu-urgent-cannot-cancel"),
                 "",
                 "&eИспользование:",
                 "&f/drestart start <время> Тех.Работы",
                 "&fПример: /drestart start 5m Тех.Работы"
             ));
 
-        // Кнопка обычного рестарта
         ItemStack normalRestart = createItem(Material.GREEN_WOOL,
-            plugin.getMessage("menu-normal-restart"),
+            plugin.getConfigManager().getMessage("menu-normal-restart"),
             Arrays.asList(
-                plugin.getMessage("menu-normal-restart-lore"),
-                "&aМожно отменить",
+                plugin.getConfigManager().getMessage("menu-normal-restart-lore"),
+                plugin.getConfigManager().getMessage("menu-normal-can-cancel"),
                 "",
                 "&eИспользование:",
                 "&f/drestart start <время> <причина>",
@@ -81,19 +77,19 @@ public class RestartMenu implements Listener {
         Player player = (Player) event.getWhoClicked();
         String displayName = clicked.getItemMeta().getDisplayName();
 
-        if (displayName.equals(plugin.getMessage("menu-auto-restart"))) {
+        if (displayName.equals(plugin.getConfigManager().getMessage("menu-auto-restart"))) {
             player.closeInventory();
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
                 "&eВведите команду: &f/autorestart set <часы>"));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
                 "&eПример: &f/autorestart set 6"));
-        } else if (displayName.equals(plugin.getMessage("menu-urgent-restart"))) {
+        } else if (displayName.equals(plugin.getConfigManager().getMessage("menu-urgent-restart"))) {
             player.closeInventory();
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
                 "&eВведите команду: &f/drestart start <время> Тех.Работы"));
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
                 "&eПример: &f/drestart start 5m Тех.Работы"));
-        } else if (displayName.equals(plugin.getMessage("menu-normal-restart"))) {
+        } else if (displayName.equals(plugin.getConfigManager().getMessage("menu-normal-restart"))) {
             player.closeInventory();
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
                 "&eВведите команду: &f/drestart start <время> <причина>"));
@@ -110,4 +106,4 @@ public class RestartMenu implements Listener {
         item.setItemMeta(meta);
         return item;
     }
-} 
+}

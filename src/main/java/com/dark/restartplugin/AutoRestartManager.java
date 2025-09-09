@@ -1,61 +1,35 @@
 package com.dark.restartplugin;
 
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitTask;
-import java.util.concurrent.TimeUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class AutoRestartManager {
     private final RestartPlugin plugin;
     private BukkitTask autoRestartTask;
-    private final FileConfiguration config;
 
     public AutoRestartManager(RestartPlugin plugin) {
         this.plugin = plugin;
-        this.config = plugin.getConfig();
-        startAutoRestart();
     }
 
-    private void startAutoRestart() {
-        if (!config.getBoolean("auto-restart.enabled")) {
+    public void startAutoRestart() {
+        if (!plugin.getConfig().getBoolean("auto-restart.enabled", false)) {
             return;
         }
 
-        long intervalHours = config.getInt("auto-restart.interval");
-        List<Integer> warnings = config.getIntegerList("auto-restart.warnings");
+        long intervalHours = plugin.getConfig().getInt("auto-restart.interval", 6);
+        List<Integer> warnings = plugin.getConfig().getIntegerList("auto-restart.warnings");
 
-        if (autoRestartTask != null) {
-            autoRestartTask.cancel();
-        }
+        cancelAutoRestart();
+
+        long intervalTicks = TimeUnit.HOURS.toSeconds(intervalHours) * 20L;
 
         autoRestartTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             String reason = "Автоматический рестарт (каждые " + intervalHours + " часов)";
-            plugin.getRestartManager().scheduleRestart(
-                0, // мгновенный рестарт после окончания предупреждений
-                reason,
-                false,
-                warnings
-            );
-        }, TimeUnit.HOURS.toSeconds(intervalHours) * 20L, TimeUnit.HOURS.toSeconds(intervalHours) * 20L);
+            plugin.getRestartManager().scheduleRestart(0, reason, false, warnings);
+        }, intervalTicks, intervalTicks);
 
         plugin.getLogger().info("Авторестарт запущен с интервалом " + intervalHours + " часов");
-    }
-
-    public String getStatus() {
-        if (!config.getBoolean("auto-restart.enabled")) {
-            return plugin.getMessage("autorestart-not-active");
-        }
-
-        int hours = config.getInt("auto-restart.interval");
-        return plugin.getMessage("autorestart-status")
-                .replace("%status%", "Активен | Каждые " + hours + " часов");
-    }
-
-    public void reload() {
-        if (autoRestartTask != null) {
-            autoRestartTask.cancel();
-        }
-        startAutoRestart();
     }
 
     public void cancelAutoRestart() {
@@ -63,6 +37,38 @@ public class AutoRestartManager {
             autoRestartTask.cancel();
             autoRestartTask = null;
         }
-        plugin.getLogger().info("Авторестарт отключен");
+    }
+
+    public void loadAutoRestart() {
+        if (plugin.getConfig().getBoolean("auto-restart.enabled", false)) {
+            startAutoRestart();
+        }
+    }
+
+    public void setAutoRestart(int hours, boolean enabled) {
+        plugin.getConfig().set("auto-restart.enabled", enabled);
+        plugin.getConfig().set("auto-restart.interval", hours);
+        plugin.saveConfig();
+
+        if (enabled) {
+            startAutoRestart();
+        } else {
+            cancelAutoRestart();
+        }
+    }
+
+    public String getStatus() {
+        if (!plugin.getConfig().getBoolean("auto-restart.enabled", false)) {
+            return plugin.getConfigManager().getMessage("autorestart-not-active");
+        }
+
+        int hours = plugin.getConfig().getInt("auto-restart.interval", 6);
+        return plugin.getConfigManager().getMessage("autorestart-status")
+                .replace("%status%", "Активен | Каждые " + hours + " часов");
+    }
+
+    public void reload() {
+        cancelAutoRestart();
+        startAutoRestart();
     }
 }

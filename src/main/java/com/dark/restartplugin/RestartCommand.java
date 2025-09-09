@@ -5,7 +5,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +20,7 @@ public class RestartCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!sender.hasPermission("darkrestart.use")) {
-            sender.sendMessage(plugin.getMessage("no-permission"));
+            sender.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
             return true;
         }
 
@@ -29,7 +28,7 @@ public class RestartCommand implements CommandExecutor, TabCompleter {
             if (sender instanceof Player) {
                 plugin.getRestartMenu().openMenu((Player) sender);
             } else {
-                sender.sendMessage(plugin.getMessage("players-only"));
+                sender.sendMessage(plugin.getConfigManager().getMessage("players-only"));
             }
             return true;
         }
@@ -37,50 +36,17 @@ public class RestartCommand implements CommandExecutor, TabCompleter {
         switch (args[0].toLowerCase()) {
             case "menu":
                 if (!(sender instanceof Player)) {
-                    sender.sendMessage(plugin.getMessage("players-only"));
+                    sender.sendMessage(plugin.getConfigManager().getMessage("players-only"));
                     return true;
                 }
                 plugin.getRestartMenu().openMenu((Player) sender);
                 return true;
 
             case "start":
-                if (args.length < 2) {
-                    sender.sendMessage(plugin.getMessage("command-usage"));
-                    return true;
-                }
-
-                long time = parseTime(args[1]);
-                if (time <= 0) {
-                    sender.sendMessage(plugin.getMessage("invalid-time-format"));
-                    return true;
-                }
-
-                String reason = "Запланированный рестарт";
-                if (args.length > 2) {
-                    reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-                }
-
-                boolean isTechnical = reason.equalsIgnoreCase("Тех.Работы");
-                if (isTechnical && !sender.hasPermission("darkrestart.technical")) {
-                    sender.sendMessage(plugin.getMessage("technical-permission"));
-                    return true;
-                }
-
-                plugin.getRestartManager().scheduleRestart(time, reason, isTechnical);
-                sender.sendMessage(plugin.getMessage("restart-scheduled")
-                        .replace("%time%", formatTime(time))
-                        .replace("%reason%", reason));
-                return true;
+                return handleStart(sender, args);
 
             case "cancel":
-                if (plugin.getRestartManager().isTechnical()) {
-                    sender.sendMessage(plugin.getMessage("cannot-cancel-technical"));
-                    return true;
-                }
-
-                plugin.getRestartManager().cancelRestart();
-                sender.sendMessage(plugin.getMessage("restart-cancelled"));
-                return true;
+                return handleCancel(sender);
 
             case "status":
                 sender.sendMessage(plugin.getRestartManager().getStatus());
@@ -91,9 +57,50 @@ public class RestartCommand implements CommandExecutor, TabCompleter {
                 return true;
 
             default:
-                sender.sendMessage(plugin.getMessage("command-usage"));
+                sender.sendMessage(plugin.getConfigManager().getMessage("command-usage"));
                 return true;
         }
+    }
+
+    private boolean handleStart(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(plugin.getConfigManager().getMessage("command-usage"));
+            return true;
+        }
+
+        long time = parseTime(args[1]);
+        if (time <= 0) {
+            sender.sendMessage(plugin.getConfigManager().getMessage("invalid-time-format"));
+            return true;
+        }
+
+        String reason = "Запланированный рестарт";
+        if (args.length > 2) {
+            reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        }
+
+        boolean isTechnical = reason.equalsIgnoreCase("Тех.Работы");
+        if (isTechnical && !sender.hasPermission("darkrestart.technical")) {
+            sender.sendMessage(plugin.getConfigManager().getMessage("technical-permission"));
+            return true;
+        }
+
+        plugin.getRestartManager().scheduleRestart(time, reason, isTechnical);
+        sender.sendMessage(plugin.getConfigManager().getMessage("restart-scheduled")
+                .replace("%time%", formatTime(time))
+                .replace("%reason%", reason));
+        return true;
+    }
+
+    private boolean handleCancel(CommandSender sender) {
+        if (plugin.getRestartManager().isTechnical()) {
+            sender.sendMessage(plugin.getConfigManager().getMessage("cannot-cancel-technical"));
+            return true;
+        }
+
+        plugin.getRestartManager().cancelRestart();
+        sender.sendMessage(plugin.getConfigManager().getMessage("restart-cancelled"));
+        return true;
     }
 
     @Override
@@ -139,11 +146,11 @@ public class RestartCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(plugin.getMessage("help-header"));
-        sender.sendMessage(plugin.getMessage("help-restart"));
-        sender.sendMessage(plugin.getMessage("help-cancel"));
-        sender.sendMessage(plugin.getMessage("help-status"));
-        sender.sendMessage(plugin.getMessage("help-menu"));
-        sender.sendMessage(plugin.getMessage("help-time-format"));
+        sender.sendMessage(plugin.getConfigManager().getMessage("help-header"));
+        sender.sendMessage(plugin.getConfigManager().getMessage("help-restart"));
+        sender.sendMessage(plugin.getConfigManager().getMessage("help-cancel"));
+        sender.sendMessage(plugin.getConfigManager().getMessage("help-status"));
+        sender.sendMessage(plugin.getConfigManager().getMessage("help-menu"));
+        sender.sendMessage(plugin.getConfigManager().getMessage("help-time-format"));
     }
-} 
+}

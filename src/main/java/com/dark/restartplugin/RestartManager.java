@@ -1,10 +1,11 @@
 package com.dark.restartplugin;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -19,37 +20,22 @@ public class RestartManager {
         this.plugin = plugin;
     }
 
-    public void scheduleRestart(long time, String reason, boolean isTechnical) {
-        if (restartTask != null) {
-            restartTask.cancel();
-        }
-
-        this.restartTime = System.currentTimeMillis() + time;
-        this.restartReason = reason;
-        this.isTechnical = isTechnical;
-
-        // Сохраняем в конфиг
-        plugin.getConfig().set("restart.time", restartTime);
-        plugin.getConfig().set("restart.reason", restartReason);
-        plugin.getConfig().set("restart.is-technical", isTechnical);
-        plugin.saveConfig();
-
-        // Запускаем обратный отсчет
-        startCountdown();
+    public void scheduleRestart(long delayMillis, String reason, boolean technical) {
+        scheduleRestart(delayMillis, reason, technical, 
+            plugin.getConfig().getIntegerList("restart.warnings"));
     }
 
-    // Add new overloaded method
-    public void scheduleRestart(long delay, String reason, boolean technical, List<Integer> warnings) {
-        if (isRestartScheduled()) {
-            return;
-        }
+    public void scheduleRestart(long delayMillis, String reason, boolean technical, List<Integer> warnings) {
+        cancelRestart();
 
-        this.restartTime = System.currentTimeMillis() + delay;
+        this.restartTime = System.currentTimeMillis() + delayMillis;
         this.restartReason = reason;
         this.isTechnical = technical;
+
+        plugin.getConfigManager().saveRestartData(restartTime, restartReason, isTechnical);
+        startCountdown(warnings);
         
-        startWarnings(warnings);
-        saveRestartData();
+        plugin.getLogger().info("Рестарт запланирован на " + formatTime(delayMillis) + ". Причина: " + reason);
     }
 
     public void cancelRestart() {
@@ -61,71 +47,88 @@ public class RestartManager {
         restartTime = 0;
         restartReason = null;
         isTechnical = false;
-
-        // Очищаем конфиг
-        plugin.getConfig().set("restart.time", 0);
-        plugin.getConfig().set("restart.reason", null);
-        plugin.getConfig().set("restart.is-technical", false);
-        plugin.saveConfig();
+        plugin.getConfigManager().clearRestartData();
     }
 
-    private void startCountdown() {
+    public void loadScheduledRestart() {
+        RestartData data = plugin.getConfigManager().getRestartData();
+        if (data.isValid()) {
+            long timeLeft = data.getTime() - System.currentTimeMillis();
+            if (timeLeft > 0) {
+                scheduleRestart(timeLeft, data.getReason(), data.isTechnical());
+            }
+        }
+    }
+
+    private void startCountdown(List<Integer> warnings) {
         restartTask = new BukkitRunnable() {
             @Override
             public void run() {
                 long timeLeft = restartTime - System.currentTimeMillis();
                 if (timeLeft <= 0) {
                     performRestart();
+                    cancel();
                     return;
                 }
 
-                // Отправляем уведомления
-                sendNotifications(timeLeft);
+                sendNotifications(timeLeft, warnings);
             }
         }.runTaskTimer(plugin, 0L, 20L);
     }
 
-    private void sendNotifications(long timeLeft) {
-        String timeString = formatTime(timeLeft);
-        String message = plugin.getMessage("server-restarting")
-                .replace("%time%", timeString)
-                .replace("%reason%", restartReason);
+    private void sendNotifications(long timeLeft, List<Integer> warnings) {
+        long secondsLeft = TimeUnit.MILLISECONDS.toSeconds(timeLeft);
 
-        // Отправляем в ActionBar
-        if (plugin.getConfig().getBoolean("notifications.actionbar")) {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                player.sendActionBar(message);
+        if (warnings.contains((int) secondsLeft)) {
+            String message = plugin.getConfigManager().getMessage("server-restarting")
+                    .replace("%time%", formatTime(timeLeft))
+                    .replace("%reason%", restartReason);
+
+            Bukkit.broadcastMessage(message);
+
+            if (plugin.getConfig().getBoolean("notifications.sounds", true)) {
+                String soundName = plugin.getConfig().getString("restart.countdown-sound", "BLOCK_NOTE_BLOCK_PLING");
+                try {
+                    Sound sound = Sound.valueOf(soundName.toUpperCase());
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
+                    }
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Неверное имя звука: " + soundName);
+                }
             }
         }
 
-        // Проигрываем звук
-        if (plugin.getConfig().getBoolean("notifications.sounds")) {
-            String sound = plugin.getConfig().getString("notifications.countdown-sound");
-            float volume = (float) plugin.getConfig().getDouble("notifications.sound-volume");
-            float pitch = (float) plugin.getConfig().getDouble("notifications.sound-pitch");
+        if (plugin.getConfig().getBoolean("notifications.actionbar", true)) {
+            String actionBarMessage = plugin.getConfigManager().getMessage("countdown-actionbar")
+                    .replace("%time%", formatTime(timeLeft))
+                    .replace("%reason%", restartReason);
 
             for (Player player : Bukkit.getOnlinePlayers()) {
-                player.playSound(player.getLocation(), sound, volume, pitch);
+                player.sendActionBar(actionBarMessage);
             }
         }
     }
 
     private void performRestart() {
-        String kickMessage = plugin.getMessage("kick-message")
-                .replace("%reason%", restartReason);
+        Bukkit.broadcastMessage("§c§lСервер перезапускается!");
+        Bukkit.broadcastMessage("§cПричина: §e" + restartReason);
 
-        // Кикаем всех игроков
+        Bukkit.getWorlds().forEach(world -> world.save());
+
+        String kickMessage = ChatColor.translateAlternateColorCodes('&',
+            "&cСервер перезагружается!\n&6Причина: &e" + restartReason + "\n&aВозвращайтесь через минуту!");
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kickPlayer(kickMessage);
         }
 
-        // Выключаем сервер
         new BukkitRunnable() {
             @Override
             public void run() {
                 Bukkit.shutdown();
             }
-        }.runTaskLater(plugin, 20L);
+        }.runTaskLater(plugin, 40L);
     }
 
     private String formatTime(long millis) {
@@ -144,33 +147,18 @@ public class RestartManager {
 
     public String getStatus() {
         if (restartTime == 0) {
-            return plugin.getMessage("restart-not-active");
+            return plugin.getConfigManager().getMessage("restart-not-active");
         }
 
         long timeLeft = restartTime - System.currentTimeMillis();
         String timeString = formatTime(timeLeft);
-        String reason = restartReason;
 
-        return plugin.getMessage("restart-status")
-                .replace("%status%", timeString + " | " + reason);
+        return plugin.getConfigManager().getMessage("restart-status")
+                .replace("%status%", timeString + " | " + restartReason);
     }
 
-    public boolean isRestartScheduled() {
-        return restartTime > 0;
-    }
-
-    public boolean isTechnical() {
-        return isTechnical;
-    }
-
-    private void startWarnings(List<Integer> warnings) {
-        // Placeholder for warning logic
-    }
-
-    private void saveRestartData() {
-        plugin.getConfig().set("restart.time", restartTime);
-        plugin.getConfig().set("restart.reason", restartReason);
-        plugin.getConfig().set("restart.is-technical", isTechnical);
-        plugin.saveConfig();
-    }
+    public boolean isRestartScheduled() { return restartTime > 0; }
+    public boolean isTechnical() { return isTechnical; }
+    public long getRestartTime() { return restartTime; }
+    public String getRestartReason() { return restartReason; }
 }
