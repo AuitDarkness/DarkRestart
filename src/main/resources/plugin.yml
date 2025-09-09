@@ -9,12 +9,12 @@ softdepend: [Vault]
 commands:
   drestart:
     description: Основная команда плагина
-    usage: /<command> [menu|start|cancel|status]
+    usage: /<command> [menu|start|cancel|status|help]
     aliases: [dr]
     permission: darkrestart.use
   autorestart:
     description: Команда управления авторестартом
-    usage: /<command> [status]
+    usage: /<command> [set|cancel|status|help]
     permission: darkrestart.autorestart
 
 permissions:

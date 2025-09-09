@@ -39,6 +39,7 @@ public class RestartPlugin extends JavaPlugin {
         }
     }
 
+    
     @Override
     public void onDisable() {
         if (restartManager != null) {
@@ -50,9 +51,14 @@ public class RestartPlugin extends JavaPlugin {
         getLogger().info("§cDarkRestartPlugin выключен!");
     }
 
+    
+
     // Геттеры
     public RestartManager getRestartManager() { return restartManager; }
     public AutoRestartManager getAutoRestartManager() { return autoRestartManager; }
     public RestartMenu getRestartMenu() { return restartMenu; }
     public ConfigManager getConfigManager() { return configManager; }
+
+
 }
+
