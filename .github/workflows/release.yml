@@ -90,11 +90,17 @@ jobs:
         echo "Building release version ${{ needs.prepare-release.outputs.version }}"
         mvn clean package -DskipTests
         
-        # Rename artifact to include version
+        # Verify artifact exists
         cd target
         ARTIFACT_NAME="${{ env.PLUGIN_NAME }}-${{ needs.prepare-release.outputs.version }}.jar"
-        mv ${{ env.PLUGIN_NAME }}-*.jar "$ARTIFACT_NAME"
         echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+        
+        # Check if artifact exists (Maven Shade already creates the correct name)
+        if [ ! -f "$ARTIFACT_NAME" ]; then
+          echo "Error: Expected artifact $ARTIFACT_NAME not found!"
+          ls -la
+          exit 1
+        fi
         
         # Verify the artifact
         echo "=== Build Verification ==="
