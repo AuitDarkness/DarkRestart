@@ -50,10 +50,15 @@ jobs:
       run: mvn clean package -DskipTests
       
     - name: 📊 Display Build Info
+      shell: bash
       run: |
         echo "Build completed successfully!"
         echo "Artifact location: target/"
-        ls -la target/ || dir target\
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          dir target
+        else
+          ls -la target/
+        fi
         
     - name: 📤 Upload Build Artifacts
       uses: actions/upload-artifact@v4
