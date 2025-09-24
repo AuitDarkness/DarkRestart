@@ -74,7 +74,7 @@ jobs:
         
         # Update pom.xml version (only project version, not plugin versions)
         # Replace version only in the first 15 lines where project version is located
-        sed -i "1,15s/<version>.*<\/version>/<version>$VERSION<\/version>/" pom.xml
+        sed -i '0,/<\/parent>/!b; /<version>/s/<version>.*<\/version>/<version>'"$VERSION"'<\/version>/' pom.xml
         
         # Update plugin.yml version  
         sed -i "s/version: .*/version: $VERSION/" src/main/resources/plugin.yml
