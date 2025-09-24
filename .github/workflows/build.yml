@@ -44,7 +44,6 @@ jobs:
       
     - name: 🧪 Run Tests
       run: mvn test
-      continue-on-error: true
       
     - name: 🎯 Package Plugin
       run: mvn clean package -DskipTests
