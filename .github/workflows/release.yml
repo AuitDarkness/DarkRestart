@@ -72,8 +72,9 @@ jobs:
       run: |
         VERSION="${{ needs.prepare-release.outputs.version }}"
         
-        # Update pom.xml version
-        sed -i "s/<version>.*<\/version>/<version>$VERSION<\/version>/" pom.xml
+        # Update pom.xml version (only project version, not plugin versions)
+        # Replace version only in the first 15 lines where project version is located
+        sed -i "1,15s/<version>.*<\/version>/<version>$VERSION<\/version>/" pom.xml
         
         # Update plugin.yml version  
         sed -i "s/version: .*/version: $VERSION/" src/main/resources/plugin.yml
@@ -104,7 +105,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: release-artifact
-        path: target/${{ env.ARTIFACT_NAME }}
+        path: target/${{ env.PLUGIN_NAME }}-${{ needs.prepare-release.outputs.version }}.jar
         retention-days: 90
 
   create-release:
@@ -192,7 +193,6 @@ jobs:
           release/DarkRestartPlugin-${{ needs.prepare-release.outputs.version }}.jar
         prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}
         draft: false
-        make_latest: ${{ needs.prepare-release.outputs.is_prerelease == 'false' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
