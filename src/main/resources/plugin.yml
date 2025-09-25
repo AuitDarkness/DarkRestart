@@ -1,35 +1,43 @@
 name: DarkRestart
-version: 1.0.2
+version: 1.1.0
 main: com.dark.restartplugin.RestartPlugin
-api-version: 1.13
+api-version: "1.13"
 authors: [AuitDarkness]
 description: Мощный плагин для управления рестартом сервера
 website: https://github.com/AuitDarkness/DarkRestart
 softdepend: [Vault]
+
 commands:
   drestart:
     description: Основная команда плагина
     usage: /<command> [menu|start|cancel|status|help]
     aliases: [dr]
-    permission: darkrestart.use
   autorestart:
     description: Команда управления авторестартом
     usage: /<command> [set|cancel|status|help]
-    permission: darkrestart.autorestart
 
 permissions:
+  darkrestart.*:
+    description: Все права плагина
+    default: op
+    children:
+      - darkrestart.use
+      - darkrestart.technical
+      - darkrestart.status
+      - darkrestart.autorestart
+      
   darkrestart.use:
     description: Базовый доступ к плагину
     default: op
+    
   darkrestart.technical:
     description: Доступ к техническому рестарту
     default: op
+    
   darkrestart.status:
     description: Доступ к просмотру статуса рестарта
     default: op
+    
   darkrestart.autorestart:
     description: Доступ к управлению авторестартом
-    default: op
-  darkrestart.autorestart.status:
-    description: Доступ к просмотру статуса авторестарта
     default: op

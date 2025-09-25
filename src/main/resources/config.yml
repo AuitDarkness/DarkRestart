@@ -1,0 +1,13 @@
+restart:
+  countdown-sound: "BLOCK_NOTE_BLOCK_PLING"
+  warnings: [300, 60, 30, 10, 5]
+
+notifications:
+  actionbar: true
+  sounds: true
+  broadcast: true
+
+auto-restart:
+  enabled: false    
+  interval: 6
+  warnings: [300, 60, 30, 10, 5]

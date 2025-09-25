@@ -1,3 +1,4 @@
+// RestartPlugin.java
 package com.dark.restartplugin;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,35 +12,26 @@ public class RestartPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
-            // Сначала инициализируем ConfigManager
             this.configManager = new ConfigManager(this);
-            
-            // Загружаем конфигурации ДО создания других менеджеров
-            configManager.loadConfigs();
-
-            // Теперь инициализируем остальные менеджеры
             this.restartManager = new RestartManager(this);
             this.autoRestartManager = new AutoRestartManager(this);
             this.restartMenu = new RestartMenu(this);
 
-            // Регистрация команд
+            configManager.loadConfigs();
+
             getCommand("drestart").setExecutor(new RestartCommand(this));
             getCommand("autorestart").setExecutor(new AutoRestartCommand(this));
 
-            // Восстановление запланированных рестартов
             restartManager.loadScheduledRestart();
             autoRestartManager.loadAutoRestart();
 
-            getLogger().info("§aDarkRestartPlugin успешно включен!");
-            
+            getLogger().info("DarkRestart успешно запущен!");
         } catch (Exception e) {
-            getLogger().severe("§cОшибка при включении плагина: " + e.getMessage());
-            e.printStackTrace();
+            getLogger().severe("Критическая ошибка при запуске: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
         }
     }
 
-    
     @Override
     public void onDisable() {
         if (restartManager != null) {
@@ -51,14 +43,8 @@ public class RestartPlugin extends JavaPlugin {
         getLogger().info("§cDarkRestartPlugin выключен!");
     }
 
-    
-
-    // Геттеры
     public RestartManager getRestartManager() { return restartManager; }
     public AutoRestartManager getAutoRestartManager() { return autoRestartManager; }
     public RestartMenu getRestartMenu() { return restartMenu; }
     public ConfigManager getConfigManager() { return configManager; }
-
-
 }
-

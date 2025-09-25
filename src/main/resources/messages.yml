@@ -1,0 +1,68 @@
+messages:
+  no-permission: "§cУ вас нет прав на использование этой команды!"
+  players-only: "§cЭта команда доступна только игрокам!"
+  command-usage: "§cИспользование: /drestart <menu|start|cancel|status|help>"
+  autorestart-usage: "§cИспользование: /autorestart <set|cancel|status>"
+  restart-not-active: "§cРестарт не запланирован"
+  invalid-time-format: "&cНеверный формат времени! Используйте: 30s, 5m, 1h"
+  invalid-number: "&cНеверное число!"
+  greater-than-zero: "&cЧисло должно быть больше 0!"
+  
+  restart-scheduled: "§aРестарт запланирован на §e%time%§a. Причина: §e%reason%"
+  restart-cancelled: "§aЗапланированный рестарт отменен"
+  restart-status: "§aСтатус рестарта: §e%status%"
+  server-restarting: "§cСервер перезапускается через §e%time%§c. Причина: §e%reason%"
+  cannot-cancel-technical: "§cНевозможно отменить технический рестарт!"
+  technical-permission: "§cУ вас нет прав на выполнение технического рестарта!"
+  
+  autorestart-set: "§aАвторестарт установлен на каждые §e%hours%§a часов"
+  autorestart-cancelled: "§aАвторестарт отменен"
+  autorestart-status: "§aСтатус авторестарта: §e%status%"
+  autorestart-not-active: "§cАвторестарт не установлен"
+  
+  menu-title: "§8Управление рестартом"
+  menu-back: "Назад"
+  menu-help: "Помощь"
+  
+  menu-auto-restart: "§eАвторестарт"
+  menu-auto-restart-lore: "§7Установить автоматический рестарт"
+  menu-auto-restart-cannot-cancel: "&cНельзя отменить!"
+  menu-auto-restart-title: "&6&lВыберите интервал авторестарта"
+  menu-auto-restart-time: "&eКаждые {hours} часов"
+  menu-auto-restart-time-lore: "&7Нажмите, чтобы установить"
+  
+  menu-urgent-restart: "§cСрочный рестарт"
+  menu-urgent-restart-lore: "§7Выполнить технический рестарт"
+  menu-urgent-cannot-cancel: "&cНельзя отменить!"
+  menu-urgent-restart-title: "&6&lВыберите время срочного рестарта"
+  menu-urgent-restart-time: "&cЧерез {time}"
+  menu-urgent-restart-time-lore: "&7Нажмите, чтобы установить"
+  
+  menu-normal-restart: "§aОбычный рестарт"
+  menu-normal-restart-lore: "§7Запланировать обычный рестарт"
+  menu-normal-can-cancel: "&aМожно отменить"
+  menu-normal-restart-title: "&6&lВыберите время обычного рестарта"
+  menu-normal-restart-time: "&aЧерез {time}"
+  menu-normal-restart-time-lore: "&7Нажмите, чтобы установить"
+  
+  menu-cancel-restart: "§cОтменить рестарт"
+  menu-cancel-restart-lore: "§7Отменить запланированный рестарт"
+  menu-cancel-title: "&6&lОтмена рестарта"
+  menu-cancel-confirm: "&cПодтвердить отмену"
+  
+  countdown-actionbar: "&c⚠ Рестарт через &e%time% &c| &6%reason%"
+
+  menu-custom-time: "&6Свое время"
+  menu-custom-time-title: "&6&lВвод времени"
+  menu-time-input-instruction: "&6Введите время"
+  
+  menu-confirm-title: "&6&lПодтверждение рестарта"
+  menu-confirm-restart: "&6Подтвердить рестарт"
+  
+  help-header: "§6§l=== Dark Restart Plugin ==="
+  help-restart: "§e/drestart start <время> [причина] §7- Запланировать рестарт"
+  help-cancel: "§e/drestart cancel §7- Отменить рестарт"
+  help-status: "§e/drestart status §7- Показать статус рестарта"
+  help-menu: "§e/drestart menu §7- Открыть меню рестарта"
+  help-autorestart: "§e/autorestart set <часы> §7- Установить авторестарт"
+  help-time-format: "§7Формат времени: §e30s §7(секунды), §e5m §7(минуты), §e1h §7(часы)"

@@ -1,3 +1,4 @@
+// RestartManager.java
 package com.dark.restartplugin;
 
 import org.bukkit.Bukkit;
@@ -76,59 +77,65 @@ public class RestartManager {
         }.runTaskTimer(plugin, 0L, 20L);
     }
 
+    private void performRestart() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.kickPlayer(ChatColor.RED + "Сервер перезагружается. Причина: " + restartReason);
+        }
+
+        Bukkit.getServer().shutdown();
+    }
+
     private void sendNotifications(long timeLeft, List<Integer> warnings) {
         long secondsLeft = TimeUnit.MILLISECONDS.toSeconds(timeLeft);
 
-        if (warnings.contains((int) secondsLeft)) {
-            String message = plugin.getConfigManager().getMessage("server-restarting")
-                    .replace("%time%", formatTime(timeLeft))
-                    .replace("%reason%", restartReason);
+        for (int warning : warnings) {
+            if (secondsLeft == warning) {
+                String message = plugin.getConfigManager().getMessage("server-restarting")
+                        .replace("%time%", formatTime(timeLeft))
+                        .replace("%reason%", restartReason);
 
-            Bukkit.broadcastMessage(message);
+                Bukkit.broadcastMessage(message);
 
-            if (plugin.getConfig().getBoolean("notifications.sounds", true)) {
-                String soundName = plugin.getConfig().getString("restart.countdown-sound", "BLOCK_NOTE_BLOCK_PLING");
-                try {
-                    Sound sound = Sound.valueOf(soundName.toUpperCase());
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
-                    }
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Неверное имя звука: " + soundName);
+                if (plugin.getConfig().getBoolean("notifications.actionbar", true)) {
+                    String actionBarMessage = "§c⚠ Рестарт через §e" + formatTime(timeLeft) + " §c| §6" + restartReason;
+                    sendActionBarToAllPlayers(actionBarMessage);
                 }
-            }
-        }
 
-        if (plugin.getConfig().getBoolean("notifications.actionbar", true)) {
-            String actionBarMessage = plugin.getConfigManager().getMessage("countdown-actionbar")
-                    .replace("%time%", formatTime(timeLeft))
-                    .replace("%reason%", restartReason);
-
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                player.sendActionBar(actionBarMessage);
+                if (plugin.getConfig().getBoolean("notifications.sounds", true)) {
+                    playRestartSound(secondsLeft);
+                }
+                break;
             }
         }
     }
 
-    private void performRestart() {
-        Bukkit.broadcastMessage("§c§lСервер перезапускается!");
-        Bukkit.broadcastMessage("§cПричина: §e" + restartReason);
-
-        Bukkit.getWorlds().forEach(world -> world.save());
-
-        String kickMessage = ChatColor.translateAlternateColorCodes('&',
-            "&cСервер перезагружается!\n&6Причина: &e" + restartReason + "\n&aВозвращайтесь через минуту!");
-
+    private void sendActionBarToAllPlayers(String message) {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.kickPlayer(kickMessage);
-        }
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Bukkit.shutdown();
+            try {
+                player.sendActionBar(message);
+            } catch (NoSuchMethodError e) {
+                player.sendTitle("", message, 10, 40, 10);
             }
-        }.runTaskLater(plugin, 40L);
+        }
+    }
+
+    private void playRestartSound(long secondsLeft) {
+        String soundName = "BLOCK_NOTE_BLOCK_PLING";
+        float pitch = 1.0f;
+        
+        if (secondsLeft <= 5) {
+            pitch = 2.0f; 
+        } else if (secondsLeft <= 30) {
+            pitch = 1.5f;
+        }
+        
+        try {
+            Sound sound = Sound.valueOf(soundName);
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.playSound(player.getLocation(), sound, 0.8f, pitch);
+            }
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     private String formatTime(long millis) {

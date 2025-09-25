@@ -1,11 +1,11 @@
+// AutoRestartCommand.java
 package com.dark.restartplugin;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.entity.Player;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Arrays;    
 import java.util.List;
 
 public class AutoRestartCommand implements TabExecutor {
@@ -59,8 +59,6 @@ public class AutoRestartCommand implements TabExecutor {
                 sender.sendMessage(plugin.getConfigManager().getMessage("greater-than-zero"));
                 return true;
             }
-
-            // Проверка допустимых интервалов
             int[] validIntervals = {1, 2, 4, 6, 8, 12, 24};
             boolean isValid = false;
             for (int interval : validIntervals) {
@@ -69,22 +67,16 @@ public class AutoRestartCommand implements TabExecutor {
                     break;
                 }
             }
-
             if (!isValid) {
                 sender.sendMessage("§cНеверный интервал! Допустимые значения: 1, 2, 4, 6, 8, 12, 24");
                 return true;
             }
-
             plugin.getAutoRestartManager().setAutoRestart(hours, true);
-            
             String message = plugin.getConfigManager().getMessage("autorestart-set")
-                    .replace("%hours%", String.valueOf(hours));
+            .replace("%hours%", String.valueOf(hours));
             sender.sendMessage(message);
-            
-            // Дополнительная информация
             sender.sendMessage("§7Предупреждения будут отправляться за: §e5 мин, 1 мин, 30 сек, 10 сек, 5 сек");
             sender.sendMessage("§7Используйте §e/autorestart cancel §7для отмены");
-            
             return true;
         } catch (NumberFormatException e) {
             sender.sendMessage(plugin.getConfigManager().getMessage("invalid-number"));
@@ -98,7 +90,6 @@ public class AutoRestartCommand implements TabExecutor {
             sender.sendMessage("§cАвторестарт не активен!");
             return true;
         }
-
         plugin.getAutoRestartManager().setAutoRestart(0, false);
         sender.sendMessage(plugin.getConfigManager().getMessage("autorestart-cancelled"));
         return true;
@@ -127,21 +118,16 @@ public class AutoRestartCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
         List<String> completions = new ArrayList<>();
-
         if (!sender.hasPermission("darkrestart.autorestart")) {
             return completions;
         }
-
         if (args.length == 1) {
             completions.addAll(Arrays.asList("set", "cancel", "status", "help"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("set")) {
             completions.addAll(Arrays.asList("1", "2", "4", "6", "8", "12", "24"));
         }
-
-        // Фильтрация по вводу
         String input = args[args.length - 1].toLowerCase();
         completions.removeIf(s -> !s.toLowerCase().startsWith(input));
-
         return completions;
     }
 }
