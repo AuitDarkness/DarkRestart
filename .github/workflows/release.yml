@@ -1,0 +1,213 @@
+name: 🚀 Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.3)'
+        required: true
+        type: string
+
+env:
+  PLUGIN_NAME: DarkRestartPlugin
+
+jobs:
+  prepare-release:
+    name: 🎯 Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+      
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 🔢 Extract Version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG="${{ github.event.inputs.tag }}"
+        else
+          TAG="${{ github.ref_name }}"
+        fi
+        
+        # Remove 'v' prefix if present
+        VERSION=${TAG#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Check if this is a pre-release (contains alpha, beta, rc, etc.)
+        if [[ $VERSION =~ (alpha|beta|rc|pre|dev) ]]; then
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Detected version: $VERSION"
+        echo "Is pre-release: $(echo $VERSION | grep -E '(alpha|beta|rc|pre|dev)' && echo true || echo false)"
+
+  build-release:
+    name: 🏗️ Build Release
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: ☕ Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'maven'
+        
+    - name: 🔄 Update Version in Files
+      run: |
+        VERSION="${{ needs.prepare-release.outputs.version }}"
+        
+        # Update pom.xml version (only project version, not plugin versions)
+        # Replace version only in the first 15 lines where project version is located
+        sed -i '0,/<\/parent>/!b; /<version>/s/<version>.*<\/version>/<version>'"$VERSION"'<\/version>/' pom.xml
+        
+        # Update plugin.yml version  
+        sed -i "s/version: .*/version: $VERSION/" src/main/resources/plugin.yml
+        
+        echo "Updated versions to: $VERSION"
+        echo "=== pom.xml ===" 
+        grep -A2 -B2 "<version>" pom.xml | head -10
+        echo "=== plugin.yml ==="
+        grep "version:" src/main/resources/plugin.yml
+        
+    - name: 🎯 Build Release Artifact
+      run: |
+        echo "Building release version ${{ needs.prepare-release.outputs.version }}"
+        mvn clean package -DskipTests
+        
+        # Verify artifact exists
+        cd target
+        ARTIFACT_NAME="${{ env.PLUGIN_NAME }}-${{ needs.prepare-release.outputs.version }}.jar"
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+        
+        # Check if artifact exists (Maven Shade already creates the correct name)
+        if [ ! -f "$ARTIFACT_NAME" ]; then
+          echo "Error: Expected artifact $ARTIFACT_NAME not found!"
+          ls -la
+          exit 1
+        fi
+        
+        # Verify the artifact
+        echo "=== Build Verification ==="
+        ls -la "$ARTIFACT_NAME"
+        jar tf "$ARTIFACT_NAME" | grep plugin.yml
+        
+    - name: 📤 Upload Release Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifact
+        path: target/${{ env.PLUGIN_NAME }}-${{ needs.prepare-release.outputs.version }}.jar
+        retention-days: 90
+
+  create-release:
+    name: 📦 Create GitHub Release  
+    runs-on: ubuntu-latest
+    needs: [prepare-release, build-release]
+    permissions:
+      contents: write
+      
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 📥 Download Release Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: release-artifact
+        path: ./release/
+        
+    - name: 📝 Generate Changelog
+      id: changelog
+      run: |
+        VERSION="${{ needs.prepare-release.outputs.version }}"
+        
+        # Get the previous tag
+        PREV_TAG=$(git tag --sort=-version:refname | grep -v "^v\?$VERSION$" | head -n1)
+        
+        if [ -z "$PREV_TAG" ]; then
+          PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          echo "No previous tag found, using first commit"
+        fi
+        
+        echo "Generating changelog from $PREV_TAG to current..."
+        
+        # Generate changelog
+        CHANGELOG=$(cat << EOF
+        ## 🎉 DarkRestart Plugin v$VERSION
+        
+        ### 📋 What's New
+        $(git log $PREV_TAG..HEAD --pretty=format:"- %s" --no-merges | head -20)
+        
+        ### 📊 Statistics
+        - **Commits since last release:** $(git rev-list $PREV_TAG..HEAD --count)
+        - **Files changed:** $(git diff $PREV_TAG..HEAD --name-only | wc -l)
+        
+        ### 🔧 Installation
+        1. Download the \`DarkRestartPlugin-$VERSION.jar\` file below
+        2. Place it in your server's \`plugins/\` folder  
+        3. Restart your server
+        4. Configure the plugin using \`/drestart\` command
+        
+        ### 📖 Commands & Permissions
+        - \`/drestart [menu|start|cancel|status|help]\` - Main plugin command
+        - \`/autorestart [set|cancel|status|help]\` - Auto-restart management
+        
+        **Permissions:**
+        - \`darkrestart.use\` - Basic plugin access
+        - \`darkrestart.autorestart\` - Auto-restart control
+        
+        ### ⚙️ Requirements
+        - **Java:** 17+ 
+        - **Server:** PaperMC 1.18+ (Spigot/Bukkit compatible)
+        - **Dependencies:** None required (Vault optional)
+        
+        ---
+        *Built with ❤️ by AuitDarkness | [Report Issues](https://github.com/AuitDarkness/DarkRestart/issues)*
+        EOF
+        )
+        
+        # Save changelog to file and output
+        echo "$CHANGELOG" > changelog.md
+        echo "CHANGELOG_CONTENT<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT  
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: 🚀 Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ needs.prepare-release.outputs.version }}
+        name: "🎮 DarkRestart v${{ needs.prepare-release.outputs.version }}"
+        body: ${{ steps.changelog.outputs.CHANGELOG_CONTENT }}
+        files: |
+          release/DarkRestartPlugin-${{ needs.prepare-release.outputs.version }}.jar
+        prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}
+        draft: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: 🎊 Release Summary
+      run: |
+        echo "## 🚀 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ needs.prepare-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Pre-release:** ${{ needs.prepare-release.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Artifact:** DarkRestartPlugin-${{ needs.prepare-release.outputs.version }}.jar" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.prepare-release.outputs.version }})" >> $GITHUB_STEP_SUMMARY
