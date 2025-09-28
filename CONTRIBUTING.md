@@ -87,7 +87,7 @@ DarkRestart/
 ## Контакты
 
 Если у вас есть вопросы:
-- Discord: ваш_дискорд
-- Discord сервер: https://discord.gg/ваш_сервер
+- Discord: differssss
+- Discord сервер: https://discord.gg/7SsDFTUd
 
 Спасибо за ваш вклад в проект! 
