@@ -33,14 +33,6 @@
 - `1h` - 1 час
 - `2h` - 2 часа
 
-## Права доступа
-
-- `darkrestart.use` - Базовый доступ к плагину
-- `darkrestart.technical` - Доступ к техническому рестарту
-- `darkrestart.status` - Просмотр статуса рестарта
-- `darkrestart.autorestart` - Управление авторестартом
-- `darkrestart.autorestart.status` - Просмотр статуса авторестарта
-
 ## Настройка
 ```yaml
 restart:
